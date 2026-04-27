@@ -1,0 +1,3 @@
+/* index.css — Sukoon entry stylesheet */
+/* Import the shared theme so CSS variables and base styles are available globally */
+@import "./styles/theme.css";

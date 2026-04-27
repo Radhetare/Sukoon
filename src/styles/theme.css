@@ -1,0 +1,39 @@
+/* theme.css — Sukoon Global Theme */
+
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap");
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --sage: #7aab95;
+  --sage-light: #a8c9bb;
+  --sage-pale: #e8f2ee;
+  --teal: #3d8b7a;
+  --sky: #d4eae4;
+  --ink: #1e3530;
+  --mist: #f5faf8;
+  --dust: #8aada5;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "DM Sans", sans-serif;
+  background: var(--mist);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
