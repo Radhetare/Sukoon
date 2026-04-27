@@ -20,7 +20,7 @@
  *   <MoodSelector mode="strip" onSelect={handleMood} selected={currentMood} />
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import "./MoodSelector.css";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

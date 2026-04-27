@@ -4,7 +4,6 @@ import {
   useCallback,
   createContext,
   useContext,
-  useRef,
 } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 
@@ -198,7 +197,7 @@ export default function App() {
   const [pageKey, setPageKey] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const { toasts, addToast } = useToasts();
-  const prevPath = useRef(state.currentPath);
+
 
   useEffect(() => {
     document.title = "Sukoon — Your Safe Space";
