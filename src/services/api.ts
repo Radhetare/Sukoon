@@ -20,7 +20,7 @@ export interface SukoonConfig {
 const CONFIG: SukoonConfig = {
   provider: "custom",
   apiKey: import.meta.env?.VITE_API_KEY || "",
-  customBaseUrl: import.meta.env?.VITE_CUSTOM_API_URL || "http://localhost:8000",
+  customBaseUrl: import.meta.env.VITE_API_URL || "http://localhost:8000",
   model: import.meta.env?.VITE_AI_MODEL || "",
   maxTokens: 500,
   temperature: 0.85,
