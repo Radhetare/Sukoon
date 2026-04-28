@@ -220,8 +220,8 @@
 
   /* ── Who It's For ───────────────────────────────── */
   .lp-who-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.2rem; max-width: 900px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 1.2rem; max-width: 700px; margin: 0 auto;
   }
   .lp-who-card {
     background: white; border: 1px solid rgba(122,171,149,0.15); border-radius: 16px;

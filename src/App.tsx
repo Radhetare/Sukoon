@@ -5,12 +5,16 @@ import {
   createContext,
   useContext,
 } from "react";
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import MoodSelector from "./components/MoodSelector";
 import Landing from "./pages/Landing";
 import Chat from "./pages/Chat";
+import Journal from "./pages/Journal";
+import Settings from "./pages/Settings";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import "./App.css";
 
 import type { Mood } from "./components/MoodSelector";
@@ -165,6 +169,14 @@ const PrivacyPage = () => (
   </div>
 );
 
+// ─── Protected Route ────────────────────────────────────────────────────────
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const token = localStorage.getItem("sukoon_token");
+  if (!token) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+};
+
 // ─── 404 ─────────────────────────────────────────────────────────────────────
 
 const NotFoundPage = ({ onNavigate }: { onNavigate: (p: string) => void }) => (
@@ -197,7 +209,6 @@ export default function App() {
   const [pageKey, setPageKey] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const { toasts, addToast } = useToasts();
-
 
   useEffect(() => {
     document.title = "Sukoon — Your Safe Space";
@@ -265,7 +276,11 @@ export default function App() {
     return (
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/chat" element={<Chat />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+        <Route path="/journal" element={<ProtectedRoute><Journal /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="*" element={<NotFoundPage onNavigate={navigate} />} />
       </Routes>
@@ -274,6 +289,9 @@ export default function App() {
 
   const isLanding = state.currentPath === "/";
   const isChat = state.currentPath === "/chat";
+  const isJournal = state.currentPath === "/journal";
+  const isSettings = state.currentPath === "/settings";
+  const isFullScreen = isChat || isJournal || isSettings;
 
   return (
     <AppContext.Provider value={contextValue}>
@@ -287,8 +305,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* Navbar — Landing has its own nav, so skip it there */}
-      {!isLanding && (
+      {/* Navbar — Landing, Chat, Journal, Settings all have their own layouts */}
+      {!isLanding && !isFullScreen && (
         <Navbar
           currentPath={state.currentPath}
           onNavigate={navigate}
@@ -304,8 +322,8 @@ export default function App() {
         key={pageKey}
         className={[
           "app-page",
-          isChat ? "app-chat" : "",
-          !isLanding && !isChat ? "app-default" : "",
+          isFullScreen ? "app-chat" : "",
+          !isLanding && !isFullScreen ? "app-default" : "",
           state.isTransitioning ? "app-page-exit" : "app-page-enter",
         ]
           .filter(Boolean)

@@ -308,8 +308,8 @@ export default function Landing() {
         <span className="lp-footer-note">© 2025 · EN23CS · 6N-CSE</span>
         <div className="lp-footer-links">
           <Link to="/privacy">Privacy</Link>
-          <Link to="/about">About</Link>
-          <Link to="/contact">Contact</Link>
+          <Link to="/journal">Journal</Link>
+          <Link to="/settings">Settings</Link>
         </div>
       </footer>
     </>

@@ -1,289 +1,472 @@
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap");
 
-  :root {
-    --ms-sage:       #7aab95;
-    --ms-sage-light: #a8c9bb;
-    --ms-sage-pale:  #e8f2ee;
-    --ms-teal:       #3d8b7a;
-    --ms-sky:        #d4eae4;
-    --ms-ink:        #1e3530;
-    --ms-mist:       #f5faf8;
-    --ms-dust:       #8aada5;
-  }
+:root {
+  --ms-sage: #7aab95;
+  --ms-sage-light: #a8c9bb;
+  --ms-sage-pale: #e8f2ee;
+  --ms-teal: #3d8b7a;
+  --ms-sky: #d4eae4;
+  --ms-ink: #1e3530;
+  --ms-mist: #f5faf8;
+  --ms-dust: #8aada5;
+}
 
-  /* ══════════════════════════════════════
+/* ══════════════════════════════════════
      WHEEL MODE — Full-screen overlay
   ══════════════════════════════════════ */
 
-  .ms-overlay {
-    position: fixed; inset: 0; z-index: 300;
-    background: rgba(20, 40, 35, 0.65);
-    backdrop-filter: blur(14px);
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'DM Sans', sans-serif;
-    animation: msOverlayIn 0.3s ease forwards;
-  }
-  @keyframes msOverlayIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
-
-  .ms-wheel-card {
-    background: var(--ms-mist);
-    border-radius: 32px;
-    padding: 2.8rem 2.4rem 2.4rem;
-    width: min(520px, 94vw);
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    box-shadow: 0 40px 100px rgba(20,40,35,0.35);
-    animation: msCardIn 0.35s cubic-bezier(0.34,1.15,0.64,1) forwards;
-  }
-  @keyframes msCardIn {
-    from { opacity: 0; transform: scale(0.88) translateY(20px); }
-    to   { opacity: 1; transform: scale(1) translateY(0); }
-  }
-  .ms-wheel-card::-webkit-scrollbar { width: 3px; }
-  .ms-wheel-card::-webkit-scrollbar-thumb { background: var(--ms-sage-light); border-radius: 4px; }
-
-  /* Close button */
-  .ms-close {
-    position: absolute; top: 1.4rem; right: 1.4rem;
-    width: 32px; height: 32px; border-radius: 50%;
-    background: var(--ms-sage-pale); border: 1px solid rgba(122,171,149,0.25);
-    display: grid; place-items: center; cursor: pointer;
-    font-size: 0.9rem; color: var(--ms-dust);
-    transition: background 0.18s, color 0.18s;
-  }
-  .ms-close:hover { background: var(--ms-sky); color: var(--ms-teal); }
-
-  /* Header */
-  .ms-wheel-header { text-align: center; margin-bottom: 2rem; }
-  .ms-wheel-eyebrow {
-    font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
-    color: var(--ms-sage); margin-bottom: 0.5rem;
-    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-  }
-  .ms-wheel-eyebrow::before, .ms-wheel-eyebrow::after {
-    content: ''; display: block; width: 24px; height: 1px; background: var(--ms-sage-light);
-  }
-  .ms-wheel-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.9rem; font-weight: 300; color: var(--ms-ink);
-    line-height: 1.2;
-  }
-  .ms-wheel-title em { font-style: italic; color: var(--ms-teal); }
-  .ms-wheel-sub {
-    font-size: 0.82rem; color: var(--ms-dust); font-weight: 300;
-    margin-top: 0.4rem; line-height: 1.6;
-  }
-
-  /* Mood grid */
-  .ms-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.75rem;
-    margin-bottom: 1.6rem;
-  }
-
-  .ms-mood-card {
-    border-radius: 16px;
-    padding: 1rem 0.75rem;
-    cursor: pointer;
-    border: 1.5px solid transparent;
-    background: #fff;
-    text-align: center;
-    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s, background 0.2s;
-    position: relative;
-    overflow: hidden;
-  }
-  .ms-mood-card::before {
-    content: '';
-    position: absolute; inset: 0;
+.ms-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(20, 40, 35, 0.65);
+  backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "DM Sans", sans-serif;
+  animation: msOverlayIn 0.3s ease forwards;
+}
+@keyframes msOverlayIn {
+  from {
     opacity: 0;
-    transition: opacity 0.2s;
   }
-  .ms-mood-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  to {
+    opacity: 1;
   }
-  .ms-mood-card:hover::before { opacity: 1; }
-  .ms-mood-card.ms-selected {
-    transform: translateY(-3px) scale(1.03);
-    box-shadow: 0 10px 28px rgba(0,0,0,0.12);
-  }
+}
 
-  /* Entry stagger */
-  .ms-mood-card { animation: msCardItemIn 0.4s both; }
-  .ms-mood-card:nth-child(1) { animation-delay: 0.04s; }
-  .ms-mood-card:nth-child(2) { animation-delay: 0.08s; }
-  .ms-mood-card:nth-child(3) { animation-delay: 0.12s; }
-  .ms-mood-card:nth-child(4) { animation-delay: 0.16s; }
-  .ms-mood-card:nth-child(5) { animation-delay: 0.20s; }
-  .ms-mood-card:nth-child(6) { animation-delay: 0.24s; }
-  .ms-mood-card:nth-child(7) { animation-delay: 0.28s; }
-  .ms-mood-card:nth-child(8) { animation-delay: 0.32s; }
-  .ms-mood-card:nth-child(9) { animation-delay: 0.36s; }
-  @keyframes msCardItemIn {
-    from { opacity: 0; transform: translateY(14px) scale(0.94); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
+.ms-wheel-card {
+  background: var(--ms-mist);
+  border-radius: 32px;
+  padding: 2.8rem 2.4rem 2.4rem;
+  width: min(520px, 94vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 40px 100px rgba(20, 40, 35, 0.35);
+  animation: msCardIn 0.35s cubic-bezier(0.34, 1.15, 0.64, 1) forwards;
+}
+@keyframes msCardIn {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(20px);
   }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.ms-wheel-card::-webkit-scrollbar {
+  width: 3px;
+}
+.ms-wheel-card::-webkit-scrollbar-thumb {
+  background: var(--ms-sage-light);
+  border-radius: 4px;
+}
 
-  .ms-mood-emoji {
-    font-size: 1.8rem; margin-bottom: 0.4rem; line-height: 1;
-    transition: transform 0.2s;
-    display: block;
-  }
-  .ms-mood-card:hover .ms-mood-emoji,
-  .ms-mood-card.ms-selected .ms-mood-emoji { transform: scale(1.18); }
+/* Close button */
+.ms-close {
+  position: absolute;
+  top: 1.4rem;
+  right: 1.4rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--ms-sage-pale);
+  border: 1px solid rgba(122, 171, 149, 0.25);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--ms-dust);
+  transition:
+    background 0.18s,
+    color 0.18s;
+}
+.ms-close:hover {
+  background: var(--ms-sky);
+  color: var(--ms-teal);
+}
 
-  .ms-mood-name {
-    font-size: 0.78rem; font-weight: 400;
-    color: var(--ms-ink); margin-bottom: 0.2rem;
-    transition: color 0.2s;
-    position: relative; z-index: 1;
-  }
-  .ms-mood-desc {
-    font-size: 0.65rem; font-weight: 300; color: var(--ms-dust);
-    line-height: 1.4;
-    position: relative; z-index: 1;
-  }
+/* Header */
+.ms-wheel-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.ms-wheel-eyebrow {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ms-sage);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.ms-wheel-eyebrow::before,
+.ms-wheel-eyebrow::after {
+  content: "";
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: var(--ms-sage-light);
+}
+.ms-wheel-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.9rem;
+  font-weight: 300;
+  color: var(--ms-ink);
+  line-height: 1.2;
+}
+.ms-wheel-title em {
+  font-style: italic;
+  color: var(--ms-teal);
+}
+.ms-wheel-sub {
+  font-size: 0.82rem;
+  color: var(--ms-dust);
+  font-weight: 300;
+  margin-top: 0.4rem;
+  line-height: 1.6;
+}
 
-  /* Selected checkmark */
-  .ms-check {
-    position: absolute; top: 0.5rem; right: 0.5rem;
-    width: 18px; height: 18px; border-radius: 50%;
-    display: grid; place-items: center;
-    font-size: 0.62rem; color: white;
-    opacity: 0; transform: scale(0);
-    transition: opacity 0.2s, transform 0.25s cubic-bezier(0.34,1.4,0.64,1);
-  }
-  .ms-mood-card.ms-selected .ms-check {
-    opacity: 1; transform: scale(1);
-  }
+/* Mood grid */
+.ms-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.6rem;
+}
 
-  /* Intensity slider */
-  .ms-intensity {
-    background: #fff;
-    border: 1px solid rgba(122,171,149,0.18);
-    border-radius: 16px;
-    padding: 1.2rem 1.4rem;
-    margin-bottom: 1.4rem;
-    animation: msCardItemIn 0.35s 0.1s both;
-  }
-  .ms-intensity-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 1rem;
-  }
-  .ms-intensity-label {
-    font-size: 0.78rem; font-weight: 400; color: var(--ms-ink);
-  }
-  .ms-intensity-value {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1rem; font-weight: 400;
-  }
+.ms-mood-card {
+  border-radius: 16px;
+  padding: 1rem 0.75rem;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  background: #fff;
+  text-align: center;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s,
+    border-color 0.2s,
+    background 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.ms-mood-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.ms-mood-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+.ms-mood-card:hover::before {
+  opacity: 1;
+}
+.ms-mood-card.ms-selected {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+}
 
-  .ms-intensity-dots {
-    display: flex; gap: 0.5rem; align-items: center;
+/* Entry stagger */
+.ms-mood-card {
+  animation: msCardItemIn 0.4s both;
+}
+.ms-mood-card:nth-child(1) {
+  animation-delay: 0.04s;
+}
+.ms-mood-card:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.ms-mood-card:nth-child(3) {
+  animation-delay: 0.12s;
+}
+.ms-mood-card:nth-child(4) {
+  animation-delay: 0.16s;
+}
+.ms-mood-card:nth-child(5) {
+  animation-delay: 0.2s;
+}
+.ms-mood-card:nth-child(6) {
+  animation-delay: 0.24s;
+}
+.ms-mood-card:nth-child(7) {
+  animation-delay: 0.28s;
+}
+.ms-mood-card:nth-child(8) {
+  animation-delay: 0.32s;
+}
+.ms-mood-card:nth-child(9) {
+  animation-delay: 0.36s;
+}
+@keyframes msCardItemIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.94);
   }
-  .ms-dot-btn {
-    flex: 1; height: 6px; border-radius: 3px;
-    background: var(--ms-sage-pale); border: none; cursor: pointer;
-    transition: background 0.2s, transform 0.15s;
-    position: relative;
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
-  .ms-dot-btn::after {
-    content: '';
-    position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%);
-    font-size: 0.6rem; color: var(--ms-dust); white-space: nowrap;
-  }
-  .ms-dot-btn:hover { transform: scaleY(1.6); }
-  .ms-dot-btn.ms-dot-active { background: var(--ms-teal); }
+}
 
-  .ms-intensity-text {
-    text-align: center; margin-top: 0.6rem;
-    font-size: 0.74rem; color: var(--ms-dust); font-weight: 300;
-  }
+.ms-mood-emoji {
+  font-size: 1.8rem;
+  margin-bottom: 0.4rem;
+  line-height: 1;
+  transition: transform 0.2s;
+  display: block;
+}
+.ms-mood-card:hover .ms-mood-emoji,
+.ms-mood-card.ms-selected .ms-mood-emoji {
+  transform: scale(1.18);
+}
 
-  /* Confirm button */
-  .ms-confirm {
-    width: 100%; padding: 0.9rem;
-    border-radius: 14px; border: none; cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem; font-weight: 500;
-    color: white; letter-spacing: 0.04em;
-    transition: opacity 0.2s, transform 0.18s, box-shadow 0.2s;
-    animation: msCardItemIn 0.35s 0.2s both;
-  }
-  .ms-confirm:hover:not(:disabled) {
-    opacity: 0.9; transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.18);
-  }
-  .ms-confirm:disabled {
-    opacity: 0.4; cursor: not-allowed;
-  }
-  .ms-confirm-hint {
-    text-align: center; margin-top: 0.75rem;
-    font-size: 0.7rem; color: var(--ms-dust); font-weight: 300;
-  }
+.ms-mood-name {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--ms-ink);
+  margin-bottom: 0.2rem;
+  transition: color 0.2s;
+  position: relative;
+  z-index: 1;
+}
+.ms-mood-desc {
+  font-size: 0.65rem;
+  font-weight: 300;
+  color: var(--ms-dust);
+  line-height: 1.4;
+  position: relative;
+  z-index: 1;
+}
 
-  /* ══════════════════════════════════════
+/* Selected checkmark */
+.ms-check {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.62rem;
+  color: white;
+  opacity: 0;
+  transform: scale(0);
+  transition:
+    opacity 0.2s,
+    transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.ms-mood-card.ms-selected .ms-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Intensity slider */
+.ms-intensity {
+  background: #fff;
+  border: 1px solid rgba(122, 171, 149, 0.18);
+  border-radius: 16px;
+  padding: 1.2rem 1.4rem;
+  margin-bottom: 1.4rem;
+  animation: msCardItemIn 0.35s 0.1s both;
+}
+.ms-intensity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.ms-intensity-label {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--ms-ink);
+}
+.ms-intensity-value {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.ms-intensity-dots {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.ms-dot-btn {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--ms-sage-pale);
+  border: none;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    transform 0.15s;
+  position: relative;
+}
+.ms-dot-btn::after {
+  content: "";
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6rem;
+  color: var(--ms-dust);
+  white-space: nowrap;
+}
+.ms-dot-btn:hover {
+  transform: scaleY(1.6);
+}
+.ms-dot-btn.ms-dot-active {
+  background: var(--ms-teal);
+}
+
+.ms-intensity-text {
+  text-align: center;
+  margin-top: 0.6rem;
+  font-size: 0.74rem;
+  color: var(--ms-dust);
+  font-weight: 300;
+}
+
+/* Confirm button */
+.ms-confirm {
+  width: 100%;
+  padding: 0.9rem;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: white;
+  letter-spacing: 0.04em;
+  transition:
+    opacity 0.2s,
+    transform 0.18s,
+    box-shadow 0.2s;
+  animation: msCardItemIn 0.35s 0.2s both;
+}
+.ms-confirm:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+.ms-confirm:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.ms-confirm-hint {
+  text-align: center;
+  margin-top: 0.75rem;
+  font-size: 0.7rem;
+  color: var(--ms-dust);
+  font-weight: 300;
+}
+
+/* ══════════════════════════════════════
      STRIP MODE — Compact horizontal pills
   ══════════════════════════════════════ */
 
-  .ms-strip {
-    display: flex;
-    gap: 0.45rem;
-    flex-wrap: wrap;
-    font-family: 'DM Sans', sans-serif;
-  }
+.ms-strip {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  font-family: "DM Sans", sans-serif;
+}
 
-  .ms-strip-pill {
-    display: flex; align-items: center; gap: 0.35rem;
-    padding: 0.34rem 0.8rem;
-    border-radius: 20px; cursor: pointer;
-    border: 1.5px solid rgba(122,171,149,0.22);
-    background: transparent;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.74rem; font-weight: 300;
-    color: var(--ms-dust);
-    transition: all 0.18s;
-    white-space: nowrap;
-  }
-  .ms-strip-pill:hover {
-    border-color: var(--ms-sage);
-    color: var(--ms-teal);
-    background: var(--ms-sage-pale);
-    transform: translateY(-1px);
-  }
-  .ms-strip-pill.ms-strip-selected {
-    color: white;
-    border-color: transparent;
-    transform: translateY(-1px);
-    box-shadow: 0 3px 12px rgba(0,0,0,0.14);
-  }
-  .ms-strip-pill span:first-child { font-size: 0.95rem; }
+.ms-strip-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.34rem 0.8rem;
+  border-radius: 20px;
+  cursor: pointer;
+  border: 1.5px solid rgba(122, 171, 149, 0.22);
+  background: transparent;
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.74rem;
+  font-weight: 300;
+  color: var(--ms-dust);
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+.ms-strip-pill:hover {
+  border-color: var(--ms-sage);
+  color: var(--ms-teal);
+  background: var(--ms-sage-pale);
+  transform: translateY(-1px);
+}
+.ms-strip-pill.ms-strip-selected {
+  color: white;
+  border-color: transparent;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.14);
+}
+.ms-strip-pill span:first-child {
+  font-size: 0.95rem;
+}
 
-  /* Strip entry animation */
-  .ms-strip-pill {
-    animation: msStripIn 0.3s both;
+/* Strip entry animation */
+.ms-strip-pill {
+  animation: msStripIn 0.3s both;
+}
+.ms-strip-pill:nth-child(1) {
+  animation-delay: 0.03s;
+}
+.ms-strip-pill:nth-child(2) {
+  animation-delay: 0.06s;
+}
+.ms-strip-pill:nth-child(3) {
+  animation-delay: 0.09s;
+}
+.ms-strip-pill:nth-child(4) {
+  animation-delay: 0.12s;
+}
+.ms-strip-pill:nth-child(5) {
+  animation-delay: 0.15s;
+}
+.ms-strip-pill:nth-child(6) {
+  animation-delay: 0.18s;
+}
+.ms-strip-pill:nth-child(7) {
+  animation-delay: 0.21s;
+}
+.ms-strip-pill:nth-child(8) {
+  animation-delay: 0.24s;
+}
+.ms-strip-pill:nth-child(9) {
+  animation-delay: 0.27s;
+}
+@keyframes msStripIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
   }
-  .ms-strip-pill:nth-child(1) { animation-delay: 0.03s; }
-  .ms-strip-pill:nth-child(2) { animation-delay: 0.06s; }
-  .ms-strip-pill:nth-child(3) { animation-delay: 0.09s; }
-  .ms-strip-pill:nth-child(4) { animation-delay: 0.12s; }
-  .ms-strip-pill:nth-child(5) { animation-delay: 0.15s; }
-  .ms-strip-pill:nth-child(6) { animation-delay: 0.18s; }
-  .ms-strip-pill:nth-child(7) { animation-delay: 0.21s; }
-  .ms-strip-pill:nth-child(8) { animation-delay: 0.24s; }
-  .ms-strip-pill:nth-child(9) { animation-delay: 0.27s; }
-  @keyframes msStripIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to   { opacity: 1; transform: translateY(0); }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
 
-  @media (max-width: 480px) {
-    .ms-grid { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
-    .ms-wheel-card { padding: 2rem 1.4rem 1.8rem; border-radius: 24px; }
-    .ms-mood-emoji { font-size: 1.5rem; }
+@media (max-width: 480px) {
+  .ms-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
   }
+  .ms-wheel-card {
+    padding: 2rem 1.4rem 1.8rem;
+    border-radius: 24px;
+  }
+  .ms-mood-emoji {
+    font-size: 1.5rem;
+  }
+}

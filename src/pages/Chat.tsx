@@ -6,9 +6,11 @@
  * All AI calls go through services/api.ts.
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import ChatWindow, { type Message } from "../components/ChatWindow";
-import { sendMessage, type ChatMessage } from "../services/api";
+import { sendMessage, fetchHistory, type ChatMessage, fetchSessions, logout } from "../services/api";
+import { useApp } from "../App";
 import "./Chat.css";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -30,25 +32,23 @@ const MOODS: Mood[] = [
   { key: "happy", emoji: "😊", name: "Happy" },
 ];
 
-const PAST_SESSIONS = [
-  { title: "Feeling overwhelmed at work", time: "Yesterday" },
-  { title: "Exam anxiety", time: "2 days ago" },
-  { title: "Family conflict", time: "Last week" },
-];
-
 const getTime = () =>
   new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-// ─── CSS ──────────────────────────────────────────────────────────────────────
-// Styles extracted to Chat.css
-
 // ─── Breathing phases ─────────────────────────────────────────────────────────
 
-const BREATH_PHASES = ["Breathe in 🌬️", "Hold 🫁", "Breathe out 💨", "Hold 🫁"];
+const BREATH_PHASES = [
+  { label: "Breathe in", emoji: "🌬️ ", duration: 4, instruction: "Inhale slowly through your nose" },
+  { label: "Hold", emoji: "🫁", duration: 4, instruction: "Hold gently" },
+  { label: "Breathe out", emoji: "💨", duration: 6, instruction: "Exhale slowly through your mouth" },
+  { label: "Rest", emoji: "🌿", duration: 2, instruction: "Rest before the next breath" },
+];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Chat() {
+  const navigate = useNavigate();
+  const { openMood, state: appState } = useApp();
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -57,36 +57,147 @@ export default function Chat() {
   const [activeMood, setActiveMood] = useState<Mood | null>(null);
   const [showBreathing, setShowBreathing] = useState(false);
   const [breathPhaseIdx, setBreathPhaseIdx] = useState(0);
-  const [sessionId, setSessionId] = useState<string | undefined>(undefined);
+  const [breathCycle, setBreathCycle] = useState(0);
+  const [breathProgress, setBreathProgress] = useState(0);
+  const breathIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const breathTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [sessions, setSessions] = useState<Array<{ sessionId: string; lastMessage: string; timestamp: any }>>([]);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
+  // Initialize session and load history from backend
+  useEffect(() => {
+    const initChat = async () => {
+      let id = localStorage.getItem("sukoon_session_id");
+      if (!id) {
+        id = `sukoon_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        localStorage.setItem("sukoon_session_id", id);
+      }
+      setSessionId(id);
 
+      try {
+        const sessionList = await fetchSessions();
+        setSessions(sessionList);
 
-  // ── Breathing timer ──────────────────────────────────
-  const startBreathing = () => {
+        const history = await fetchHistory(id!);
+        setChatHistory(history);
+
+        const uiMessages: Message[] = history.map((msg, idx) => ({
+          id: idx,
+          role: msg.role === "assistant" ? "ai" : "user",
+          text: msg.content,
+          time: getTime(),
+        }));
+        setMessages(uiMessages);
+      } catch (e) {
+        console.error("Failed to load history or sessions from database:", e);
+      }
+    };
+    initChat();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (breathIntervalRef.current) clearInterval(breathIntervalRef.current);
+      if (breathTickRef.current) clearInterval(breathTickRef.current);
+    };
+  }, []);
+
+  const switchSession = useCallback(async (id: string) => {
+    setSessionId(id);
+    localStorage.setItem("sukoon_session_id", id);
+    setIsTyping(true);
+    try {
+      const history = await fetchHistory(id);
+      setChatHistory(history);
+      const uiMessages: Message[] = history.map((msg, idx) => ({
+        id: idx,
+        role: msg.role === "assistant" ? "ai" : "user",
+        text: msg.content,
+        time: getTime(),
+      }));
+      setMessages(uiMessages);
+    } catch (e) {
+      console.error("Failed to switch session:", e);
+    } finally {
+      setIsTyping(false);
+    }
+  }, []);
+
+  const startNewChat = useCallback(async () => {
+    const newId = `sukoon_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    setSessionId(newId);
+    localStorage.setItem("sukoon_session_id", newId);
+    setMessages([]);
+    setChatHistory([]);
+
+    try {
+      // This refreshes the sidebar list immediately
+      const sessionList = await fetchSessions();
+      setSessions(sessionList);
+    } catch (e) {
+      console.error("Failed to refresh sessions after new chat:", e);
+    }
+  }, []);
+
+  const startBreathing = useCallback(() => {
+    if (breathIntervalRef.current) clearInterval(breathIntervalRef.current);
+    if (breathTickRef.current) clearInterval(breathTickRef.current);
+
     setShowBreathing(true);
     setBreathPhaseIdx(0);
-    const interval = setInterval(() => {
-      setBreathPhaseIdx((i) => {
-        if (i >= BREATH_PHASES.length - 1) {
-          clearInterval(interval);
-          return i;
-        }
-        return i + 1;
-      });
-    }, 4000);
+    setBreathCycle(0);
+    setBreathProgress(0);
+
+    let currentPhase = 0;
+    const totalMs = BREATH_PHASES[0].duration * 1000;
+    let elapsed = 0;
+    breathTickRef.current = setInterval(() => {
+      elapsed += 100;
+      setBreathProgress(Math.min((elapsed / totalMs) * 100, 100));
+    }, 100);
+
+    const advance = () => {
+      currentPhase = (currentPhase + 1) % BREATH_PHASES.length;
+      setBreathPhaseIdx(currentPhase);
+      if (currentPhase === 0) setBreathCycle((c) => c + 1);
+      elapsed = 0;
+      setBreathProgress(0);
+      if (breathTickRef.current) clearInterval(breathTickRef.current);
+      const nextMs = BREATH_PHASES[currentPhase].duration * 1000;
+      breathTickRef.current = setInterval(() => {
+        elapsed += 100;
+        setBreathProgress(Math.min((elapsed / nextMs) * 100, 100));
+      }, 100);
+    };
+
+    const scheduleNext = (phaseIdx: number) => {
+      breathIntervalRef.current = setTimeout(() => {
+        advance();
+        scheduleNext((phaseIdx + 1) % BREATH_PHASES.length);
+      }, BREATH_PHASES[phaseIdx].duration * 1000) as unknown as ReturnType<typeof setInterval>;
+    };
+    scheduleNext(0);
+  }, []);
+
+  const stopBreathing = () => {
+    if (breathIntervalRef.current) clearTimeout(breathIntervalRef.current as unknown as ReturnType<typeof setTimeout>);
+    if (breathTickRef.current) clearInterval(breathTickRef.current);
+    breathIntervalRef.current = null;
+    breathTickRef.current = null;
+    setShowBreathing(false);
+    setBreathPhaseIdx(0);
+    setBreathCycle(0);
+    setBreathProgress(0);
   };
 
-  // ── Mood selection ───────────────────────────────────
   const handleMoodSelect = (mood: Mood) => {
     setSelectedMood(mood.key);
     setActiveMood(mood);
     setShowMoodBanner(true);
   };
 
-  // ── Send message ─────────────────────────────────────
   const handleSend = useCallback(
     async (text: string) => {
-      // Add user message
       const userMsg: Message = {
         id: Date.now(),
         role: "user",
@@ -96,7 +207,6 @@ export default function Chat() {
       setMessages((prev) => [...prev, userMsg]);
       setIsTyping(true);
 
-      // Build history for API
       const newHistory: ChatMessage[] = [
         ...chatHistory,
         { role: "user", content: text },
@@ -106,7 +216,7 @@ export default function Chat() {
       try {
         const response = await sendMessage(newHistory, {
           mood: selectedMood ?? undefined,
-          sessionId,
+          sessionId: sessionId ?? undefined,
         });
 
         if (!sessionId) setSessionId(response.sessionId);
@@ -147,26 +257,45 @@ export default function Chat() {
 
   return (
     <>
-      {/* Breathing overlay */}
       {showBreathing && (
-        <div className="chat-overlay" onClick={() => setShowBreathing(false)}>
+        <div className="chat-overlay" onClick={stopBreathing}>
           <div
             className="chat-breathing-card"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="chat-breathing-title">Guided Breathing</h2>
             <p className="chat-breathing-sub">
-              Follow the circle. Let your breath guide you.
+              {BREATH_PHASES[breathPhaseIdx].instruction}
             </p>
-            <div className="chat-breathing-circle">
-              {BREATH_PHASES[breathPhaseIdx].split(" ")[0]}
+
+            <div className="chat-breathing-ring-wrap">
+              <svg className="chat-breathing-ring" viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="54" className="chat-ring-bg" />
+                <circle
+                  cx="60" cy="60" r="54"
+                  className="chat-ring-fill"
+                  strokeDasharray={`${2 * Math.PI * 54}`}
+                  strokeDashoffset={`${2 * Math.PI * 54 * (1 - breathProgress / 100)}`}
+                />
+              </svg>
+              <div className="chat-breathing-circle">
+                {BREATH_PHASES[breathPhaseIdx].emoji}
+              </div>
             </div>
+
             <p className="chat-breathing-phase">
-              {BREATH_PHASES[breathPhaseIdx]}
+              {BREATH_PHASES[breathPhaseIdx].label}
             </p>
+
+            {breathCycle > 0 && (
+              <p className="chat-breathing-cycles">
+                {breathCycle} {breathCycle === 1 ? "cycle" : "cycles"} complete ✓
+              </p>
+            )}
+
             <button
               className="chat-breathing-close"
-              onClick={() => setShowBreathing(false)}
+              onClick={stopBreathing}
             >
               I feel better now
             </button>
@@ -175,7 +304,6 @@ export default function Chat() {
       )}
 
       <div className="chat-page">
-        {/* ── Sidebar ── */}
         <aside className="chat-sidebar">
           <div className="chat-sidebar-header">
             <div className="chat-sidebar-logo">
@@ -202,15 +330,30 @@ export default function Chat() {
 
           <p className="chat-sidebar-label">Past Sessions</p>
           <div className="chat-session-list">
-            {PAST_SESSIONS.map((s, i) => (
-              <button
-                key={i}
-                className={`chat-session-item${i === 0 ? " active" : ""}`}
-              >
-                <div className="chat-session-title">💬 {s.title}</div>
-                <div className="chat-session-time">{s.time}</div>
-              </button>
-            ))}
+            <button className="chat-new-chat-btn" onClick={startNewChat}>
+              <span>+</span> New Chat
+            </button>
+            {sessions.length === 0 ? (
+              <div className="chat-session-empty">No recent sessions</div>
+            ) : (
+              sessions.map((s) => (
+                <button
+                  key={s.sessionId}
+                  className={`chat-session-item ${sessionId === s.sessionId ? "active" : ""}`}
+                  onClick={() => switchSession(s.sessionId)}
+                >
+                  <div className="chat-session-preview">
+                    {s.lastMessage
+                      ? s.lastMessage.replace(/[#*_`>~\[\]]/g, "").trim().slice(0, 45) +
+                        (s.lastMessage.length > 45 ? "…" : "")
+                      : "New conversation"}
+                  </div>
+                  <div className="chat-session-time">
+                    {s.timestamp ? new Date(s.timestamp).toLocaleDateString() : ""}
+                  </div>
+                </button>
+              ))
+            )}
           </div>
 
           <div className="chat-sidebar-footer">
@@ -219,12 +362,17 @@ export default function Chat() {
               <div className="chat-sidebar-name">You</div>
               <span className="chat-sidebar-badge">Anonymous</span>
             </div>
+            <button
+              className="chat-logout-btn"
+              title="Sign out"
+              onClick={() => { logout(); navigate("/login"); }}
+            >
+              ⎋
+            </button>
           </div>
         </aside>
 
-        {/* ── Main ── */}
         <main className="chat-main">
-          {/* Header */}
           <div className="chat-header">
             <div className="chat-header-left">
               <div className="chat-ai-avatar">🌿</div>
@@ -235,22 +383,36 @@ export default function Chat() {
             </div>
             <div className="chat-header-actions">
               <button
+                className={`chat-icon-btn chat-mood-trigger${appState.currentMood ? " mood-active" : ""}`}
+                title={appState.currentMood ? `Mood: ${appState.currentMood.name}` : "Set your mood"}
+                onClick={openMood}
+              >
+                {appState.currentMood ? appState.currentMood.emoji : "🌿"}
+              </button>
+              <button
                 className="chat-icon-btn"
                 title="Breathing exercise"
                 onClick={startBreathing}
               >
                 🫁
               </button>
-              <button className="chat-icon-btn" title="Journal">
+              <button
+                className="chat-icon-btn"
+                title="Open Journal"
+                onClick={() => navigate("/journal")}
+              >
                 📓
               </button>
-              <button className="chat-icon-btn" title="Settings">
+              <button
+                className="chat-icon-btn"
+                title="Settings"
+                onClick={() => navigate("/settings")}
+              >
                 ⚙️
               </button>
             </div>
           </div>
 
-          {/* Mood banner */}
           {showMoodBanner && activeMood && (
             <div className="chat-mood-banner">
               <span style={{ fontSize: "1.2rem" }}>{activeMood.emoji}</span>
@@ -271,7 +433,6 @@ export default function Chat() {
             </div>
           )}
 
-          {/* Chat window — all message rendering happens inside here */}
           <ChatWindow
             messages={messages}
             isTyping={isTyping}

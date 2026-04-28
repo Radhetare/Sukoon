@@ -53,6 +53,7 @@ const NAV_LINKS: NavLink[] = [
   { label: "Chat", path: "/chat", icon: "💬" },
   { label: "Journal", path: "/journal", icon: "📓" },
   { label: "Privacy", path: "/privacy", icon: "🛡️" },
+  { label: "Settings", path: "/settings", icon: "⚙️" },
 ];
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
